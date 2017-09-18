@@ -22,6 +22,7 @@
 #include "rm_rid.h"
 #include "pf.h"
 
+
 //
 // RM_Record: RM Record interface
 //
@@ -38,10 +39,17 @@ public:
     RC GetRid (RID &rid) const;
 };
 
+// RM file header
+struct RM_FileHdr
+{
+    int recordSize;
+};
+
 //
 // RM_FileHandle: RM File interface
 //
 class RM_FileHandle {
+    friend class RM_Manager;
 public:
     RM_FileHandle ();
     ~RM_FileHandle();
@@ -57,6 +65,11 @@ public:
     // Forces a page (along with any contents stored in this class)
     // from the buffer pool to disk.  Default value forces all pages.
     RC ForcePages (PageNum pageNum = ALL_PAGES);
+
+private:
+    RM_FileHdr hdr;
+    PF_FileHandle m_pfh;
+    bool bHdrChanged;
 };
 
 //
@@ -91,11 +104,16 @@ public:
     RC OpenFile   (const char *fileName, RM_FileHandle &fileHandle);
 
     RC CloseFile  (RM_FileHandle &fileHandle);
+
+private:
+    PF_Manager m_pfm;
 };
 
 //
 // Print-error function
 //
 void RM_PrintError(RC rc);
+
+#define RM_OVERSIZE         (START_PF_ERR - 0) // record size too large
 
 #endif
